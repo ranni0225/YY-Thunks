@@ -5154,6 +5154,7 @@ typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
     EndAlternatives = 2
 } ALTERNATIVE_ARCHITECTURE_TYPE;
 
+// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/ns-ntddk-kuser_shared_data
 typedef struct _KUSER_SHARED_DATA
 {
     ULONG TickCountLowDeprecated;
@@ -5161,62 +5162,127 @@ typedef struct _KUSER_SHARED_DATA
     KSYSTEM_TIME InterruptTime;
     KSYSTEM_TIME SystemTime;
     KSYSTEM_TIME TimeZoneBias;
-    WORD ImageNumberLow;
-    WORD ImageNumberHigh;
+    USHORT ImageNumberLow;
+    USHORT ImageNumberHigh;
     WCHAR NtSystemRoot[260];
     ULONG MaxStackTraceDepth;
     ULONG CryptoExponent;
     ULONG TimeZoneId;
     ULONG LargePageMinimum;
-    ULONG Reserved2[7];
+    ULONG AitSamplingValue;
+    ULONG AppCompatFlag;
+    ULONGLONG RNGSeedVersion;
+    ULONG GlobalValidationRunlevel;
+    LONG TimeZoneBiasStamp;
+    ULONG NtBuildNumber;
     NT_PRODUCT_TYPE NtProductType;
-    UCHAR ProductTypeIsValid;
+    BOOLEAN ProductTypeIsValid;
+    BOOLEAN Reserved0[1];
+    USHORT NativeProcessorArchitecture;
     ULONG NtMajorVersion;
     ULONG NtMinorVersion;
-    UCHAR ProcessorFeatures[64];
+    UCHAR ProcessorFeatures[64 /* PROCESSOR_FEATURE_MAX */];
     ULONG Reserved1;
     ULONG Reserved3;
     ULONG TimeSlip;
     ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
+    ULONG BootId;
     LARGE_INTEGER SystemExpirationDate;
     ULONG SuiteMask;
-    UCHAR KdDebuggerEnabled;
-    UCHAR NXSupportPolicy;
+    BOOLEAN KdDebuggerEnabled;
+    union {
+        UCHAR MitigationPolicies;
+        struct {
+            UCHAR NXSupportPolicy : 2;
+            UCHAR SEHValidationPolicy : 2;
+            UCHAR CurDirDevicesSkippedForDlls : 2;
+            UCHAR Reserved : 2;
+        };
+    };
+    USHORT CyclesPerYield;
     ULONG ActiveConsoleId;
     ULONG DismountCount;
     ULONG ComPlusPackage;
     ULONG LastSystemRITEventTickCount;
     ULONG NumberOfPhysicalPages;
-    UCHAR SafeBootMode;
-    ULONG SharedDataFlags;
-    ULONG DbgErrorPortPresent : 1;
-    ULONG DbgElevationEnabled : 1;
-    ULONG DbgVirtEnabled : 1;
-    ULONG DbgInstallerDetectEnabled : 1;
-    ULONG SystemDllRelocated : 1;
-    ULONG SpareBits : 27;
-    UINT64 TestRetInstruction;
+    BOOLEAN SafeBootMode;
+    union {
+        UCHAR VirtualizationFlags;
+        struct {
+            UCHAR ArchStartedInEl2 : 1;
+            UCHAR QcSlIsSupported : 1;
+        };
+    };
+    UCHAR Reserved12[2];
+    union {
+        ULONG SharedDataFlags;
+        struct {
+            ULONG DbgErrorPortPresent : 1;
+            ULONG DbgElevationEnabled : 1;
+            ULONG DbgVirtEnabled : 1;
+            ULONG DbgInstallerDetectEnabled : 1;
+            ULONG DbgLkgEnabled : 1;
+            ULONG DbgDynProcessorEnabled : 1;
+            ULONG DbgConsoleBrokerEnabled : 1;
+            ULONG DbgSecureBootEnabled : 1;
+            ULONG DbgMultiSessionSku : 1;
+            ULONG DbgMultiUsersInSessionSku : 1;
+            ULONG DbgStateSeparationEnabled : 1;
+            ULONG SpareBits : 21;
+        } DUMMYSTRUCTNAME2;
+    } DUMMYUNIONNAME2;
+    ULONG DataFlagsPad[1];
+    ULONGLONG TestRetInstruction;
+    LONGLONG QpcFrequency;
     ULONG SystemCall;
-    ULONG SystemCallReturn;
-    UINT64 SystemCallPad[3];
-    union
-    {
+    ULONG Reserved2;
+    ULONGLONG FullNumberOfPhysicalPages;
+    ULONGLONG SystemCallPad[1];
+    union {
         KSYSTEM_TIME TickCount;
-        UINT64 TickCountQuad;
-    };
+        ULONG64 TickCountQuad;
+        struct {
+            ULONG ReservedTickCountOverlay[3];
+            ULONG TickCountPad[1];
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME3;
     ULONG Cookie;
-    INT64 ConsoleSessionForegroundProcessId;
-    ULONG Wow64SharedInformation[16];
-    WORD UserModeGlobalLogger[8];
-    ULONG HeapTracingPid[2];
-    ULONG CritSecTracingPid[2];
+    ULONG CookiePad[1];
+    LONGLONG ConsoleSessionForegroundProcessId;
+    ULONGLONG TimeUpdateLock;
+    ULONGLONG BaselineSystemTimeQpc;
+    ULONGLONG BaselineInterruptTimeQpc;
+    ULONGLONG QpcSystemTimeIncrement;
+    ULONGLONG QpcInterruptTimeIncrement;
+    UCHAR QpcSystemTimeIncrementShift;
+    UCHAR QpcInterruptTimeIncrementShift;
+    USHORT UnparkedProcessorCount;
+    ULONG EnclaveFeatureMask[4];
+    ULONG TelemetryCoverageRound;
+    USHORT UserModeGlobalLogger[16];
     ULONG ImageFileExecutionOptions;
-    union
-    {
-        UINT64 AffinityPad;
-        ULONG ActiveProcessorAffinity;
+    ULONG LangGenerationCount;
+    ULONGLONG Reserved4;
+    ULONGLONG InterruptTimeBias;
+    ULONGLONG QpcBias;
+    ULONG ActiveProcessorCount;
+    UCHAR ActiveGroupCount;
+    UCHAR Reserved9;
+    union {
+        USHORT QpcData;
+        struct {
+            UCHAR QpcBypassEnabled;
+            UCHAR QpcReserved;
+        };
     };
-    UINT64 InterruptTimeBias;
+    LARGE_INTEGER TimeZoneBiasEffectiveStart;
+    LARGE_INTEGER TimeZoneBiasEffectiveEnd;
+    XSTATE_CONFIGURATION XState;
+    KSYSTEM_TIME FeatureConfigurationChangeStamp;
+    ULONG Spare;
+    ULONG64 UserPointerAuthMask;
+    XSTATE_CONFIGURATION XStateArm64;
+    ULONG Reserved10[210];
 } KUSER_SHARED_DATA;
 
 #define KI_USER_SHARED_DATA 0x7ffe0000
